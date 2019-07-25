@@ -23,21 +23,25 @@ LDFLAGS_INTERNAL += -lrdkafka
 
 OBJS=receivelog.o streamutil.o $(WIN32RES)
 
-all: pg_basebackup pg_receivexlog pg_recvlogical
+all: pg_basebackup pg_receivexlog pg_recvlogical jk_kafka_consumer
 
 pg_basebackup: pg_basebackup.o $(OBJS) | submake-libpq submake-libpgport
-	$(CC) $(CFLAGS) pg_basebackup.o $(OBJS) $(LDFLAGS) $(LDFLAGS_EX) $(LIBS) -o $@$(X)
+	$(CC) $(CFLAGS) pg_basebackup.o $(OBJS) $(LDFLAGS) -I/usr/local/Cellar/librdkafka/1.1.0/include/ $(LDFLAGS_EX) $(LIBS) -o $@$(X)
 
 pg_receivexlog: pg_receivexlog.o $(OBJS) | submake-libpq submake-libpgport
-	$(CC) $(CFLAGS) pg_receivexlog.o $(OBJS) $(LDFLAGS) $(LDFLAGS_EX) $(LIBS) -o $@$(X)
+	$(CC) $(CFLAGS) pg_receivexlog.o $(OBJS) $(LDFLAGS) -I/usr/local/Cellar/librdkafka/1.1.0/include/ $(LDFLAGS_EX) $(LIBS) -o $@$(X)
 
 pg_recvlogical: pg_recvlogical.o $(OBJS) | submake-libpq submake-libpgport
-	$(CC) $(CFLAGS) pg_recvlogical.o $(OBJS) $(LDFLAGS) $(LDFLAGS_EX) $(LIBS) -o $@$(X)
+	$(CC) $(CFLAGS) pg_recvlogical.o $(OBJS) $(LDFLAGS) -I/usr/local/Cellar/librdkafka/1.1.0/include/ $(LDFLAGS_EX) $(LIBS) -o $@$(X)
+
+jk_kafka_consumer: jk_kafka_consumer.o $(OBJS) | submake-libpq submake-libpgport
+	$(CC) $(CFLAGS) jk_kafka_consumer.o $(OBJS) $(LDFLAGS) -I/usr/local/Cellar/librdkafka/1.1.0/include/ $(LDFLAGS_EX) $(LIBS) -o $@$(X)
 
 install: all installdirs
 	$(INSTALL_PROGRAM) pg_basebackup$(X) '$(DESTDIR)$(bindir)/pg_basebackup$(X)'
 	$(INSTALL_PROGRAM) pg_receivexlog$(X) '$(DESTDIR)$(bindir)/pg_receivexlog$(X)'
 	$(INSTALL_PROGRAM) pg_recvlogical$(X) '$(DESTDIR)$(bindir)/pg_recvlogical$(X)'
+	#$(INSTALL_PROGRAM) jk_kafka_consumer$(X) '$(DESTDIR)$(bindir)/jk_kafka_consumer$(X)'
 
 installdirs:
 	$(MKDIR_P) '$(DESTDIR)$(bindir)'
@@ -46,10 +50,11 @@ uninstall:
 	rm -f '$(DESTDIR)$(bindir)/pg_basebackup$(X)'
 	rm -f '$(DESTDIR)$(bindir)/pg_receivexlog$(X)'
 	rm -f '$(DESTDIR)$(bindir)/pg_recvlogical$(X)'
+	rm -f '$(DESTDIR)$(bindir)/jk_kafka_consumer$(X)'
 
 clean distclean maintainer-clean:
 	rm -f pg_basebackup$(X) pg_receivexlog$(X) pg_recvlogical$(X) \
-		pg_basebackup.o pg_receivexlog.o pg_recvlogical.o \
+		pg_basebackup.o pg_receivexlog.o pg_recvlogical.o jk_kafka_consumer.o \
 		$(OBJS)
 	rm -rf tmp_check
 
